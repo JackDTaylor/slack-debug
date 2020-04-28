@@ -46,6 +46,10 @@ class Debug {
 				return '_[NULL]_';
 			}
 
+			if($variable instanceof \Throwable) {
+				$variable = $variable->__toString();
+			}
+
 			$lines = explode(PHP_EOL, print_r($variable, true));
 			foreach($lines as &$line) {
 				if(mb_strlen($line) > static::MAX_LENGTH) {
