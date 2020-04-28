@@ -1,0 +1,19 @@
+{
+	"name":         "jackdtaylor/slack-debug",
+	"type":         "library",
+	"description":  "Slack logger",
+	"keywords":     ["slack", "log", "debug"],
+	"homepage":     "https://github.com/JackDTaylor/slack-debug",
+	"license":      "MIT",
+	"authors":      [
+		{
+			"name":     "Jack D. Taylor",
+			"homepage": "https://github.com/JackDTaylor"
+		}
+	],
+	"require":      {
+		"php":  ">=7.0.0",
+		"ext-json": "*",
+		"ext-curl": "*"
+	}
+}
