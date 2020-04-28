@@ -31,7 +31,7 @@ class Debug {
 	}
 
 	public static function error(...$data) {
-		return static::send(static::getSource(), 'log', $data);
+		return static::send(static::getSource(), 'error', $data);
 	}
 
 	protected static function send($source, $type, array $data) {
