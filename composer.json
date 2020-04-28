@@ -5,8 +5,13 @@
 	"keywords": ["slack", "log", "debug"],
 	"homepage": "https://github.com/JackDTaylor/slack-debug",
 	"license": "MIT",
+	"repositories": [{
+		"url": "https://github.com/JackDTaylor/slack-debug.git",
+		"type": "git"
+	}],
 	"authors": [{
 		"name": "Jack D. Taylor",
+		"email": "msec.nt@gmail.com",
 		"homepage": "https://github.com/JackDTaylor"
 	}],
 	"autoload": {
