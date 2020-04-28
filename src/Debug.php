@@ -66,13 +66,22 @@ class Debug {
 		$lines = explode(PHP_EOL, $values);
 		$cumulative_length = 0;
 
-		foreach($lines as $line) {
+		foreach($lines as $i => $line) {
 			$length = mb_strlen($line);
 
 			if($cumulative_length + $length > static::MAX_LENGTH) {
 				if($cumulative_length > 0) {
 					$chunks[] = implode(PHP_EOL, $chunk) . '```';
 					$chunk = [];
+
+					if(count($chunks) >= 9) {
+						$lines_left = count($lines) - $i;
+
+						if($lines_left > 1) {
+							$chunks[] = "_{$lines_left} more lines were skipped._";
+							break;
+						}
+					}
 
 					$cumulative_length = 3;
 					$line = "```{$line}";
@@ -83,7 +92,9 @@ class Debug {
 			$chunk[] = $line;
 		}
 
-		$chunks[] = implode(PHP_EOL, $chunk);
+		if(count($chunk)) {
+			$chunks[] = implode(PHP_EOL, $chunk);
+		}
 
 		$chunks[0] = "{$header}\n{$chunks[0]}";
 		$root_message_id = null;
