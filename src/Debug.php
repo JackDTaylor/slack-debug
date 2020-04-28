@@ -2,6 +2,8 @@
 namespace JackDTaylor;
 
 class Debug {
+	const MAX_LENGTH = 3000;
+
 	static $token = null;
 
 	// TODO: Add documentation
@@ -46,7 +48,9 @@ class Debug {
 
 			$lines = explode(PHP_EOL, print_r($variable, true));
 			foreach($lines as &$line) {
-				$line = trim(chunk_split($line, 10000), PHP_EOL);
+				if(mb_strlen($line) > static::MAX_LENGTH) {
+					$line = chunk_split($line, static::MAX_LENGTH);
+				}
 			}
 
 			return '```' . implode(PHP_EOL, $lines) . '```';
@@ -61,18 +65,21 @@ class Debug {
 		foreach($lines as $line) {
 			$length = mb_strlen($line);
 
-			if($cumulative_length + $length > 3000) {
+			if($cumulative_length + $length > static::MAX_LENGTH) {
 				if($cumulative_length > 0) {
 					$chunks[] = implode(PHP_EOL, $chunk) . '```';
 					$chunk = [];
-					$cumulative_length = 3;
 
+					$cumulative_length = 3;
 					$line = "```{$line}";
 				}
 			}
+
 			$cumulative_length += $length;
 			$chunk[] = $line;
 		}
+
+		$chunks[] = implode(PHP_EOL, $chunk);
 
 		$chunks[0] = "{$header}\n{$chunks[0]}";
 		$root_message_id = null;
