@@ -89,6 +89,10 @@ class Debug {
 	}
 
 	protected static function sendRaw($type, $text, $thread_id = null) {
+		if(!static::$token || !static::$channel) {
+			throw new \Exception('Slack Debug is not configured properly. Run `Debug::configure("<TOKEN>", "<CHANNEL>")` first.');
+		}
+
 		$channel = static::$channel;
 
 		if(is_array($channel)) {
