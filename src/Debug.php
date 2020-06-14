@@ -14,56 +14,85 @@ class Debug {
 		static::$channel = $channel;
 	}
 
-	protected static function getSource($offset = 2) {
+	public static function values($data, $type = 'log') {
+		return static::sendValues($data, $type);
+	}
+
+	public static function log(...$data) {
+		return static::sendValues($data, 'log');
+	}
+
+	public static function error(...$data) {
+		return static::sendValues($data, 'error');
+	}
+
+	protected static function getSource($offset) {
+		// Added +2 because first entry is this function itself and second is the local (since getSource() is protected) caller.
+		$offset = $offset + 2;
+
 		// TODO: Improve tracing
 		$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 1);
 
 		$class = pos(array_reverse(explode('\\', $trace[$offset]['class'])));
 		$method = $trace[$offset]['function'];
-		$file = $trace[$offset - 1]['file'];
-		$line = $trace[$offset - 1]['line'];
+		$file = $trace[$offset]['file'];
+		$line = $trace[$offset]['line'];
 
 		return "<sftp:/{$file}:{$line}|{$class}@{$method}>";
 	}
 
-	public static function log(...$data) {
-		return static::send(static::getSource(), 'log', $data);
+	public static function formatValue($value) {
+		if(is_bool($value)) {
+			return $value ? '_[TRUE]_' : '_[FALSE]_';
+		}
+
+		if(is_null($value)) {
+			return '_[NULL]_';
+		}
+
+		if($value instanceof \Throwable) {
+			$value = $value->__toString();
+		}
+
+		// Split lines if they're too long
+		$lines = explode(PHP_EOL, print_r($value, true));
+		foreach($lines as &$line) {
+			if(mb_strlen($line) > static::MAX_LENGTH) {
+				$line = chunk_split($line, static::MAX_LENGTH);
+			}
+		}
+
+		return '```' . implode(PHP_EOL, $lines) . '```';
 	}
 
-	public static function error(...$data) {
-		return static::send(static::getSource(), 'error', $data);
+	protected static function getValueFormatter($type) {
+		return [static::class, 'formatValue'];
 	}
 
-	protected static function send($source, $type, array $data) {
+	protected static function getValueSeparator($type) {
+		return PHP_EOL.PHP_EOL;
+	}
+
+	protected static function sendValues(array $values, $type = 'log', callable $formatter = null, $separator = null) {
+		$formatter = $formatter ?? static::getValueFormatter($type);
+		$separator = $separator ?? static::getValueSeparator($type);
+
+		$values = array_map(function($value, $key) use($formatter) {
+			$value = $formatter($value);
+
+			return is_string($key) ? "*{$key}:*\n{$value}" : $value;
+		}, $values, array_keys($values));
+
+		return static::send(implode($separator, $values), $type, 2);
+	}
+
+	public static function send($message, $type = 'log', $source_offset = 0) {
+		$source = static::getSource($source_offset);
 		$header = "> *{$source} {$type}*";
-
-		$values = array_map(function($variable) {
-			if(is_bool($variable)) {
-				return $variable ? '_[TRUE]_' : '_[FALSE]_';
-			}
-
-			if(is_null($variable)) {
-				return '_[NULL]_';
-			}
-
-			if($variable instanceof \Throwable) {
-				$variable = $variable->__toString();
-			}
-
-			$lines = explode(PHP_EOL, print_r($variable, true));
-			foreach($lines as &$line) {
-				if(mb_strlen($line) > static::MAX_LENGTH) {
-					$line = chunk_split($line, static::MAX_LENGTH);
-				}
-			}
-
-			return '```' . implode(PHP_EOL, $lines) . '```';
-		}, $data);
-		$values = implode(PHP_EOL.PHP_EOL, $values);
 
 		$chunks = [];
 		$chunk = [];
-		$lines = explode(PHP_EOL, $values);
+		$lines = explode(PHP_EOL, $message);
 		$cumulative_length = 0;
 
 		foreach($lines as $i => $line) {
