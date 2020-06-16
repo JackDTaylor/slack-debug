@@ -35,8 +35,8 @@ class Debug {
 
 		$class = pos(array_reverse(explode('\\', $trace[$offset]['class'])));
 		$method = $trace[$offset]['function'];
-		$file = $trace[$offset]['file'];
-		$line = $trace[$offset]['line'];
+		$file = $trace[$offset]['file'] ?? '';
+		$line = $trace[$offset]['line'] ?? '';
 
 		return "<sftp:/{$file}:{$line}|{$class}@{$method}>";
 	}
